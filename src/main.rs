@@ -116,6 +116,6 @@ fn rocket() -> _ {
         .mount("/", routes![
             home, index, add_task, add_task_res, get_hit_count
         ])
-        .mount("/file", FileServer::from("static"))
+        // .mount("/file", FileServer::from("static"))
     
 }

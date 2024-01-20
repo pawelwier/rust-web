@@ -42,23 +42,8 @@ pub struct HitCount {
 pub struct TaskResponseJson(String);
 
 fn update_index_file(current_hit_count: usize) {
-    let t1_hbs = "
-        <!DOCTYPE html>
-        <html lang=\"en\">
-        <head>
-        <meta charset=\"UTF-8\">
-        <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">
-        <title>Rocket Web | Index</title>
-        </head>
-        <body>
-        <div>
-            Page visits: {{ hit_count }}
-        </div>
-        </body>
-        </html>
-    ";
     let mut handlebars = Handlebars::new();
-    let handlebar_file = handlebars.register_template_string("home", t1_hbs);
+    let handlebar_file = handlebars.register_template_file("home", "target/t1.hbs");
 
     match handlebar_file {
         Ok(_) => {
@@ -127,23 +112,23 @@ fn make_data(count: usize) -> Map<String, Value> {
 
 #[launch]
 fn rocket() -> _ {
-    // let t1_hbs = "
-    //     <!DOCTYPE html>
-    //     <html lang=\"en\">
-    //     <head>
-    //     <meta charset=\"UTF-8\">
-    //     <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">
-    //     <title>Rocket Web | Index</title>
-    //     </head>
-    //     <body>
-    //     <div>
-    //         Page visits: {{ hit_count }}
-    //     </div>
-    //     </body>
-    //     </html>
-    // ";
-    // let mut template_file = File::create("t1.hbs").unwrap();
-    // template_file.write(t1_hbs.as_bytes()).unwrap();
+    let t1_hbs = "
+        <!DOCTYPE html>
+        <html lang=\"en\">
+        <head>
+        <meta charset=\"UTF-8\">
+        <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">
+        <title>Rocket Web | Index</title>
+        </head>
+        <body>
+        <div>
+            Page visits: {{ hit_count }}
+        </div>
+        </body>
+        </html>
+    ";
+    let mut template_file = File::create("target/t1.hbs").unwrap();
+    template_file.write(t1_hbs.as_bytes()).unwrap();
     build()
         .manage(HitCount { count: AtomicUsize::new(0) })
         .mount("/", routes![

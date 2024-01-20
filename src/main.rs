@@ -43,16 +43,23 @@ pub struct TaskResponseJson(String);
 
 fn update_index_file(current_hit_count: usize) {
     let mut handlebars = Handlebars::new();
-    handlebars.register_template_file("home", "static/index.hbs").unwrap();
-    let data = make_data(current_hit_count);
-    let output_file = File::create("static/index.html");
+    let handlebar_file = handlebars.register_template_file("home", "static/index.hbs");
 
-    match output_file {
-        Ok(file) => {
-            let _ = handlebars.render_to_write("home", &data, &file);
+    match handlebar_file {
+        Ok(_) => {
+            let data = make_data(current_hit_count);
+            let output_file = File::create("target/index.html");
+        
+            match output_file {
+                Ok(file) => {
+                    let _ = handlebars.render_to_write("home", &data, &file);
+                }
+                Err(e) => { println!("Write to file error: {}", e) }
+            }
         }
-        Err(e) => { println!("Write to file error: {}", e) }
+        Err(e) => { println!("Read template file file error: {}", e) }
     }
+
 }
 
 fn increment_hit_count(hit_count: &State<HitCount>) -> usize {
@@ -70,7 +77,7 @@ fn index(hit_count: &State<HitCount>) -> String {
 #[get("/")]
 async fn home(hit_count: &State<HitCount>) -> Result<NamedFile, Error> {
     let _ = increment_hit_count(&hit_count);
-    NamedFile::open("static/index.html").await
+    NamedFile::open("target/index.html").await
 }
 
 #[get("/hits")]

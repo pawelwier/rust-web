@@ -12,7 +12,10 @@ use rocket::{
         Deserialize,
         json::Json
     },
-    fs::NamedFile,
+    fs::{
+        NamedFile,
+        FileServer
+    },
     response::status,
     get,
     post, 
@@ -40,9 +43,9 @@ pub struct TaskResponseJson(String);
 
 fn update_index_file(current_hit_count: usize) {
     let mut handlebars = Handlebars::new();
-    handlebars.register_template_file("home", "src/templates/index.hbs").unwrap();
+    handlebars.register_template_file("home", "static/index.hbs").unwrap();
     let data = make_data(current_hit_count);
-    let output_file = File::create("target/index.html");
+    let output_file = File::create("static/index.html");
 
     match output_file {
         Ok(file) => {
@@ -67,7 +70,7 @@ fn index(hit_count: &State<HitCount>) -> String {
 #[get("/")]
 async fn home(hit_count: &State<HitCount>) -> Result<NamedFile, Error> {
     let _ = increment_hit_count(&hit_count);
-    NamedFile::open("target/index.html").await
+    NamedFile::open("static/index.html").await
 }
 
 #[get("/hits")]
@@ -106,5 +109,6 @@ fn rocket() -> _ {
         .mount("/", routes![
             home, index, add_task, add_task_res, get_hit_count
         ])
+        .mount("/file", FileServer::from("static"))
     
 }

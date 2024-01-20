@@ -38,14 +38,35 @@ pub struct HitCount {
 #[response(status = 222, content_type = "json")]
 pub struct TaskResponseJson(String);
 
-#[get("/")]
+fn update_index_file(current_hit_count: usize) {
+    let mut handlebars = Handlebars::new();
+    handlebars.register_template_file("home", "src/templates/index.hbs").unwrap();
+    let data = make_data(current_hit_count);
+    let output_file = File::create("target/index.html");
+
+    match output_file {
+        Ok(file) => {
+            let _ = handlebars.render_to_write("home", &data, &file);
+        }
+        Err(e) => { println!("Write to file error: {}", e) }
+    }
+}
+
+fn increment_hit_count(hit_count: &State<HitCount>) -> usize {
+    let count = hit_count.count.fetch_add(1, Ordering::Relaxed) + 1;
+    update_index_file(count);
+    count
+}
+
+#[get("/count")]
 fn index(hit_count: &State<HitCount>) -> String {
-    let current_hit_count = hit_count.count.fetch_add(1, Ordering::Relaxed) + 1;
+    let current_hit_count = increment_hit_count(&hit_count);
     format!("Hello, from Rocket! Hits: {}", current_hit_count)
 }
 
-#[get("/home")]
-async fn home() -> Result<NamedFile, Error> {
+#[get("/")]
+async fn home(hit_count: &State<HitCount>) -> Result<NamedFile, Error> {
+    let _ = increment_hit_count(&hit_count);
     NamedFile::open("target/index.html").await
 }
 
@@ -72,23 +93,14 @@ fn add_task_res(task: Json<Task<'_>>) -> TaskResponseJson {
 }
 
 // TODO: move to fn, set to hit count and display
-fn make_data() -> Map<String, Value> {
+fn make_data(count: usize) -> Map<String, Value> {
     let mut data = Map::new();
-    data.insert("hit_count".to_string(), to_json("two"));
+    data.insert("hit_count".to_string(), to_json(count));
     data
 }
 
 #[launch]
 fn rocket() -> _ {
-    let mut handlebars = Handlebars::new();
-    handlebars.register_template_file("home", "src/templates/index.hbs").unwrap();
-
-    let data = make_data();
-
-    let output_file = File::create("target/index.html");
-
-    handlebars.render_to_write("home", &data, &output_file.unwrap());
-
     build()
         .manage(HitCount { count: AtomicUsize::new(0) })
         .mount("/", routes![

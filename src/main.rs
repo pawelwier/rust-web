@@ -43,7 +43,7 @@ pub struct TaskResponseJson(String);
 
 fn update_index_file(current_hit_count: usize) {
     let mut handlebars = Handlebars::new();
-    let handlebar_file = handlebars.register_template_file("home", "static/t1.hbs");
+    let handlebar_file = handlebars.register_template_file("home", "t1.hbs");
 
     match handlebar_file {
         Ok(_) => {
@@ -127,7 +127,7 @@ fn rocket() -> _ {
         </body>
         </html>
     ";
-    let mut template_file = File::create("static/t1.hbs").unwrap();
+    let mut template_file = File::create("t1.hbs").unwrap();
     template_file.write(t1_hbs.as_bytes()).unwrap();
     build()
         .manage(HitCount { count: AtomicUsize::new(0) })
